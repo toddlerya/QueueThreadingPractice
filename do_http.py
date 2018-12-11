@@ -14,7 +14,6 @@ import threading
 from database import DataBase
 import time
 
-
 global task_queue_1, data_queue
 
 task_queue_1 = Queue.Queue()
@@ -33,6 +32,22 @@ class FasterThread(threading.Thread):
         self.func(*self.args, **self.kwargs)
         print 'finish', self.func.__name__, threading.current_thread().getName()
 
+
+class FasterThread(threading.Thread):
+    def __init__(self, func, args=(), kwargs=None):
+        super(FasterThread, self).__init__()
+        if kwargs is None:
+            kwargs = {}
+        self.__func = func
+        self.__args = args
+        self.__kwargs = kwargs
+
+    def run(self):
+        try:
+            if self.__func:
+                self.__func(*self.__args, **self.__kwargs)
+        finally:
+            del self.__func, self.__args, self.__kwargs		
 
 
 def get_json_data(number, *args):
@@ -73,7 +88,7 @@ def load2db(commit_count=100):
             k = data[0]
             if k == 'age':
                 db.load_data_to_age_tb([data[1]])
-                count +=1
+                count += 1
                 data_queue.task_done()
             if k == 'name':
                 db.load_data_to_name_tb([data[1]])
